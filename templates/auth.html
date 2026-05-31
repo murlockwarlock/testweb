@@ -1,0 +1,173 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="text-center mb-6 px-2">
+        <h1 class="text-xl md:text-3xl font-black text-gray-900 tracking-tight">Вход в систему</h1>
+        <p class="text-xs md:text-sm text-gray-500 mt-1">Введите номер для доступа к тестам</p>
+    </div>
+
+    <form method="post" id="auth-form" class="space-y-4 md:space-y-5 px-2">
+        {% csrf_token %}
+        {% if error %}
+        <div class="p-3 bg-red-50 text-red-600 rounded-xl text-xs text-center border border-red-100 font-bold">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <div>
+            <input type="tel" name="phone" id="phone-input" placeholder="+7 (900) 000-00-00" required autofocus
+                class="w-full p-3 md:p-4 bg-white border-2 border-gray-100 rounded-2xl focus:border-blue-500 outline-none transition-all text-base md:text-lg font-bold text-center tracking-wider shadow-sm"
+                autocomplete="off">
+        </div>
+
+        <div id="consent-block"
+            class="relative flex items-start p-3 bg-blue-50/50 rounded-xl border border-blue-100 transition-all active:bg-blue-100/50">
+            <div class="flex items-center h-5">
+                <input type="checkbox" name="consent" id="consent" required
+                    class="w-5 h-5 text-blue-600 border-blue-300 rounded focus:ring-blue-500 cursor-pointer accent-blue-600">
+            </div>
+            <label for="consent"
+                class="ml-3 text-[10px] md:text-xs leading-tight text-gray-600 cursor-pointer select-none">
+                Соглашаюсь на обработку моих персональных данных в соответствии с <a href="{% url 'privacy' %}"
+                    target="_blank" class="text-blue-600 font-bold hover:underline">Политикой конфиденциальности</a>
+            </label>
+        </div>
+
+        <button type="submit" id="submit-btn" disabled
+            class="w-full bg-blue-600 text-white font-black py-3 md:py-4 rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition active:scale-[0.98] text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed">
+            Продолжить
+        </button>
+    </form>
+</div>
+
+<div id="consent-modal"
+    class="fixed inset-0 z-[200] hidden items-end md:items-center justify-center p-4 sm:p-0 transition-opacity duration-300 opacity-0">
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="closeConsent()"></div>
+    <div
+        class="relative bg-white w-full max-w-2xl rounded-t-[2rem] md:rounded-[2.5rem] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden transform transition-transform duration-300 translate-y-full md:translate-y-0">
+        <div class="p-5 md:p-8 border-b border-gray-100 flex justify-between items-center shrink-0">
+            <h2 class="text-lg md:text-2xl font-black text-gray-900">Согласие</h2>
+            <button type="button" onclick="closeConsent()"
+                class="p-2 bg-gray-50 rounded-full text-gray-400 hover:bg-gray-100 transition">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="p-5 md:p-8 overflow-y-auto text-gray-600 text-xs md:text-sm leading-relaxed overscroll-contain">
+            {% include 'consent_text.html' %}
+        </div>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('consent-modal');
+    const modalContent = modal.querySelector('div.relative');
+    const phoneInput = document.getElementById('phone-input');
+    const consentCheckbox = document.getElementById('consent');
+    const consentBlock = document.getElementById('consent-block');
+    const submitBtn = document.getElementById('submit-btn');
+
+    let phoneIsRegistered = null;  // null=неизвестно, true/false=проверено
+
+    function openConsent() {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modalContent.classList.remove('translate-y-full');
+        }, 10);
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeConsent() {
+        modal.classList.add('opacity-0');
+        modalContent.classList.add('translate-y-full');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+
+    function updateButtonState() {
+        const isPhoneComplete = phoneInput.value.length === 18;
+        if (!isPhoneComplete) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Продолжить';
+            return;
+        }
+        if (phoneIsRegistered === null) {
+            submitBtn.disabled = true;
+            return;
+        }
+        if (phoneIsRegistered) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Войти';
+        } else {
+            submitBtn.disabled = !consentCheckbox.checked;
+            submitBtn.textContent = 'Зарегистрироваться';
+        }
+    }
+
+    function toggleButton() {
+        const isPhoneComplete = phoneInput.value.length === 18;
+        if (!isPhoneComplete) {
+            phoneIsRegistered = null;
+            consentBlock.style.display = '';
+            consentCheckbox.required = true;
+            updateButtonState();
+            return;
+        }
+        const currentPhone = phoneInput.value;
+        phoneIsRegistered = null;
+        submitBtn.disabled = true;
+        fetch(`/check-phone/?phone=${encodeURIComponent(currentPhone)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (phoneInput.value !== currentPhone) return;
+                phoneIsRegistered = data.exists;
+                if (data.exists) {
+                    consentBlock.style.display = 'none';
+                    consentCheckbox.required = false;
+                } else {
+                    consentBlock.style.display = '';
+                    consentCheckbox.required = true;
+                }
+                updateButtonState();
+            });
+    }
+
+    phoneInput.addEventListener('input', function (e) {
+        let x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+        if (!x[2] && x[1] !== '') {
+            e.target.value = (x[1] === '7' || x[1] === '8') ? '+7 ' : '+7 ' + x[1];
+        } else {
+            e.target.value = !x[3] ? '+7 (' + x[2] : '+7 (' + x[2] + ') ' + x[3] + (x[4] ? '-' + x[4] : '') + (x[5] ? '-' + x[5] : '');
+        }
+        toggleButton();
+    });
+
+    phoneInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace' && e.target.value.length <= 4) {
+            e.preventDefault();
+        }
+    });
+
+    consentCheckbox.addEventListener('change', updateButtonState);
+
+    window.addEventListener('DOMContentLoaded', (event) => {
+        phoneInput.focus();
+        if (!phoneInput.value) {
+            phoneInput.value = '+7 ';
+        }
+        const len = phoneInput.value.length;
+        phoneInput.setSelectionRange(len, len);
+        toggleButton();
+    });
+
+    phoneInput.addEventListener('focus', function (e) {
+        if (!e.target.value) {
+            e.target.value = '+7 ';
+        }
+    });
+</script>
+{% endblock %}

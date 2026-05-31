@@ -1,0 +1,32 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 pb-20">
+    <div class="text-center mb-8">
+        <h1 class="text-2xl font-black text-gray-900">Настройки профиля</h1>
+        <p class="text-gray-500 mt-1">Здесь вы можете изменить свое имя</p>
+    </div>
+
+    <div class="bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-xl shadow-gray-200/50">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <div>
+                <label class="block text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest ml-1">Ваше имя</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                    <p class="text-red-500 text-[10px] mt-1 ml-1 font-bold">{{ form.first_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button type="submit" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition shadow-xl shadow-blue-100">
+                    Сохранить изменения
+                </button>
+                <a href="{% url 'dashboard' %}" class="w-full text-center bg-gray-100 text-gray-600 font-black py-4 rounded-2xl hover:bg-gray-200 transition">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

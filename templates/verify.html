@@ -1,0 +1,20 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="text-center mb-8 px-4">
+    <h1 class="text-2xl font-black text-gray-900">Код подтверждения</h1>
+    <p class="text-sm text-gray-500 mt-2">Введите 4 цифры из полученного SMS</p>
+</div>
+<form method="post" class="space-y-6 px-4">
+    {% csrf_token %}
+    <div>
+        <input type="text" name="code" placeholder="0000" maxlength="4" required
+               class="w-full text-center text-4xl tracking-[1rem] p-6 bg-gray-50 border-2 border-gray-100 rounded-3xl focus:border-blue-500 outline-none font-black text-blue-600">
+    </div>
+    <button type="submit" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition text-lg">
+        Подтвердить и войти
+    </button>
+    <div class="text-center mt-4">
+        <a href="{% url 'login' %}" class="text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-600">Изменить номер</a>
+    </div>
+</form>
+{% endblock %}

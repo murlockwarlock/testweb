@@ -1,0 +1,65 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div>
+        <h1 class="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Мои тесты</h1>
+        <p class="text-gray-400 text-xs font-bold mt-1">
+            Пользователь: <span class="text-gray-900">{{ user.first_name|default:user.phone }}</span>
+            <a href="{% url 'profile_update' %}" class="text-blue-600 ml-2 hover:underline decoration-2 underline-offset-4">Изменить имя</a>
+        </p>
+    </div>
+    <a href="{% url 'test_start' %}" class="w-full sm:w-auto text-center bg-blue-600 text-white px-6 py-3 rounded-2xl text-sm font-black hover:bg-blue-700 shadow-xl shadow-blue-100 transition transform hover:-translate-y-0.5">Новый тест</a>
+</div>
+
+{% if results %}
+<div class="space-y-4">
+    {% for result in results %}
+    <a href="{% url 'result' result.pk %}" class="block p-4 md:p-6 bg-white border border-gray-100 rounded-[1.5rem] md:rounded-[2rem] hover:shadow-2xl hover:shadow-blue-100/50 transition-all border-l-8 border-l-blue-600 group">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <p class="font-black text-gray-900 text-lg md:text-xl group-hover:text-blue-600 transition-colors">{{ result.child_name }}</p>
+                <div class="flex items-center gap-3 mt-2">
+                    <span class="text-[10px] md:text-xs font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full">{{ result.child_age }} лет</span>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-500">{{ result.created_at|date:"d.m.Y в H:i" }}</span>
+                </div>
+            </div>
+            <div class="w-full sm:w-auto flex justify-center items-center text-blue-600 font-black text-sm bg-blue-50 px-4 py-2 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all">
+                Смотреть
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" />
+                </svg>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-12 md:py-24 bg-white rounded-[2rem] md:rounded-[3rem] border-4 border-dashed border-gray-50 shadow-inner px-4">
+    <div class="w-16 h-16 md:w-20 md:h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-10 md:w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+    </div>
+    <h3 class="text-lg md:text-xl font-black text-gray-900 mb-2">Здесь пока пусто</h3>
+    <p class="text-sm text-gray-400 font-bold mb-8">Вы еще не проходили профориентационные тесты</p>
+    <a href="{% url 'test_start' %}" class="inline-flex items-center bg-gray-900 text-white px-6 md:px-8 py-3 md:py-4 rounded-2xl font-black hover:bg-blue-600 transition-all shadow-xl shadow-gray-200 text-sm">
+        Начать первое тестирование
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+    </a>
+</div>
+{% endif %}
+
+<div class="mt-12 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 opacity-60 hover:opacity-100 transition-opacity">
+    <div class="flex items-center gap-2">
+        <div class="w-1.5 h-1.5 rounded-full {% if user.consent_given %}bg-green-400{% else %}bg-gray-300{% endif %}"></div>
+        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            Рассылки: {% if user.consent_given %}Включены{% else %}Выключены{% endif %}
+        </span>
+    </div>
+    <a href="{% url 'toggle_consent' %}" class="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:text-blue-700 underline decoration-2 underline-offset-4">
+        {% if user.consent_given %}Отозвать согласие{% else %}Разрешить рассылку{% endif %}
+    </a>
+</div>
+{% endblock %}

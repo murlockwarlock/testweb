@@ -1,0 +1,60 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="max-w-xl mx-auto text-center px-4 py-10">
+
+    <div
+        class="bg-white rounded-[2.5rem] border-2 border-red-100 p-10 md:p-14 shadow-xl shadow-red-50/50 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-red-50 rounded-full -mr-20 -mt-20 opacity-60"></div>
+        <div class="absolute bottom-0 left-0 w-32 h-32 bg-red-50 rounded-full -ml-16 -mb-16 opacity-40"></div>
+
+        <div class="relative z-10">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </div>
+
+            <h1 class="text-2xl md:text-3xl font-black text-gray-900 mb-4 tracking-tight">
+                Оплата не прошла
+            </h1>
+
+            <p class="text-gray-500 text-sm md:text-base font-medium leading-relaxed mb-8">
+                Платеж не был завершен. Средства не списаны. Вы можете попробовать оплатить снова.
+            </p>
+
+            <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 mb-8">
+                <div class="flex items-center justify-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600 flex-shrink-0" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <p class="text-yellow-700 text-xs md:text-sm font-bold">
+                        Если проблема повторяется, попробуйте другой способ оплаты или свяжитесь с поддержкой.
+                    </p>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                {% if pk %}
+                <a href="{% url 'initiate_payment' pk %}"
+                    class="block w-full bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition shadow-xl shadow-blue-100 uppercase tracking-wider text-sm">
+                    Попробовать снова
+                </a>
+                <a href="{% url 'dashboard_pk' pk %}"
+                    class="block w-full bg-gray-100 text-gray-600 font-black py-4 rounded-2xl hover:bg-gray-200 transition uppercase tracking-wider text-sm">
+                    Вернуться к результату
+                </a>
+                {% else %}
+                <a href="{% url 'dashboard' %}"
+                    class="block w-full bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition shadow-xl shadow-blue-100 uppercase tracking-wider text-sm">
+                    Перейти в личный кабинет
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="max-w-lg mx-auto px-4 py-10">
+
+    <div class="bg-white rounded-[2.5rem] border-2 border-blue-50 p-8 md:p-12 shadow-xl shadow-blue-50/50 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
+
+        <div class="relative z-10">
+            <h1 class="text-2xl md:text-3xl font-black text-gray-900 mb-2 tracking-tight">Оплата полного отчёта</h1>
+            <p class="text-gray-400 text-sm font-medium mb-8">Детальный разбор профиля мышления, рекомендации и план развития</p>
+
+            <div class="bg-gray-50 rounded-2xl p-5 mb-8 border border-gray-100">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Участник</p>
+                <p class="font-black text-gray-900 text-lg">{{ result.child_name }}</p>
+                <p class="text-gray-500 text-sm font-medium">{{ result.child_age }} лет · Профориентационный отчёт</p>
+            </div>
+
+            <div class="mb-8">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Промокод</p>
+                <div class="flex gap-2">
+                    <input
+                        type="text"
+                        id="promo-input"
+                        value="{{ promo_code_str }}"
+                        placeholder="Введите промокод"
+                        class="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500 font-bold text-gray-900 uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-400 text-sm"
+                        autocomplete="off"
+                    >
+                    <button
+                        type="button"
+                        onclick="applyPromo()"
+                        id="promo-btn"
+                        class="bg-gray-900 text-white font-black px-5 py-3 rounded-xl text-sm uppercase tracking-wider hover:bg-gray-700 transition-colors"
+                    >Применить</button>
+                </div>
+                <div id="promo-result" class="mt-2 text-sm font-bold hidden"></div>
+            </div>
+
+            <div class="mb-8 border-t border-gray-100 pt-6">
+                <div id="price-block">
+                    {% if promo_obj %}
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-500 font-medium text-sm">Обычная цена:</span>
+                            <span class="text-gray-400 line-through font-bold">{{ config.payment_price }} ₽</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-900 font-black">Со скидкой:</span>
+                            <span class="text-green-600 font-black text-2xl">
+                                {% if final_price == 0 %}Бесплатно{% else %}{{ final_price }} ₽{% endif %}
+                            </span>
+                        </div>
+                        {% if promo_error %}
+                            <p class="text-red-500 font-bold text-sm mt-2">{{ promo_error }}</p>
+                        {% endif %}
+                    {% else %}
+                        {% if promo_error %}
+                            <p class="text-red-500 font-bold text-sm mb-4">{{ promo_error }}</p>
+                        {% endif %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-900 font-black">К оплате:</span>
+                            <span class="font-black text-2xl text-gray-900" id="price-display">{{ final_price }} ₽</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <form method="post" id="pay-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="pay">
+                <input type="hidden" name="promo_code" id="promo-hidden" value="{{ promo_code_str }}">
+                <button
+                    type="submit"
+                    id="pay-btn"
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl text-base uppercase tracking-wider transition-all shadow-lg hover:shadow-blue-500/50 hover:-translate-y-0.5"
+                >
+                    {% if final_price == 0 and promo_obj %}
+                        Получить бесплатно
+                    {% else %}
+                        Оплатить {{ final_price }} ₽
+                    {% endif %}
+                </button>
+            </form>
+
+            {% if config.example_full_report or result.suite.example_pdf_male or result.suite.example_pdf_female %}
+            <div class="text-center mt-5">
+                {% if result.child_gender == 'male' and result.suite.example_pdf_male %}
+                    <a href="/pdf/{{ result.suite.example_pdf_male.name }}" target="_blank" class="text-gray-400 hover:text-gray-600 underline text-xs font-bold">Посмотреть пример отчёта</a>
+                {% elif result.child_gender == 'female' and result.suite.example_pdf_female %}
+                    <a href="/pdf/{{ result.suite.example_pdf_female.name }}" target="_blank" class="text-gray-400 hover:text-gray-600 underline text-xs font-bold">Посмотреть пример отчёта</a>
+                {% elif config.example_full_report %}
+                    <a href="/pdf/{{ config.example_full_report.name }}" target="_blank" class="text-gray-400 hover:text-gray-600 underline text-xs font-bold">Посмотреть пример отчёта</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{% url 'dashboard_pk' result.pk %}" class="text-gray-400 hover:text-gray-600 text-xs font-bold underline">← Вернуться к результату</a>
+    </div>
+</div>
+
+<script>
+    const CHECK_PROMO_URL = "{% url 'check_promo' %}";
+    const ORIGINAL_PRICE = {{ config.payment_price }};
+
+    {% if promo_code_str and promo_obj %}
+    document.addEventListener('DOMContentLoaded', function() {
+        showPromoSuccess('{{ promo_obj.final_price }}', '{% if promo_obj.discount_type == "free" %}Бесплатно{% else %}{{ promo_obj.fixed_price }} ₽{% endif %}');
+    });
+    {% endif %}
+
+    function applyPromo() {
+        const code = document.getElementById('promo-input').value.trim().toUpperCase();
+        const resultDiv = document.getElementById('promo-result');
+
+        if (!code) {
+            showPromoMsg('Введите промокод', false);
+            return;
+        }
+
+        const btn = document.getElementById('promo-btn');
+        btn.disabled = true;
+        btn.textContent = '...';
+
+        fetch(`${CHECK_PROMO_URL}?code=${encodeURIComponent(code)}`, {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.textContent = 'Применить';
+            if (data.valid) {
+                document.getElementById('promo-hidden').value = code;
+                showPromoSuccess(data.final_price, data.price_display);
+            } else {
+                document.getElementById('promo-hidden').value = '';
+                showPromoMsg(data.message, false);
+                resetPrice();
+            }
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btn.textContent = 'Применить';
+            showPromoMsg('Ошибка проверки промокода', false);
+        });
+    }
+
+    function showPromoMsg(msg, isSuccess) {
+        const el = document.getElementById('promo-result');
+        el.className = 'mt-2 text-sm font-bold ' + (isSuccess ? 'text-green-600' : 'text-red-500');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+    }
+
+    function showPromoSuccess(finalPrice, priceDisplay) {
+        showPromoMsg('✅ Промокод применён: ' + priceDisplay, true);
+        updatePriceBlock(finalPrice, priceDisplay);
+    }
+
+    function updatePriceBlock(finalPrice, priceDisplay) {
+        const priceBlock = document.getElementById('price-block');
+        const payBtn = document.getElementById('pay-btn');
+
+        if (finalPrice == 0) {
+            priceBlock.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-500 font-medium text-sm">Обычная цена:</span>
+                    <span class="text-gray-400 line-through font-bold">${ORIGINAL_PRICE} ₽</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-900 font-black">Со скидкой:</span>
+                    <span class="text-green-600 font-black text-2xl">Бесплатно</span>
+                </div>`;
+            payBtn.textContent = 'Получить бесплатно';
+        } else {
+            priceBlock.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-500 font-medium text-sm">Обычная цена:</span>
+                    <span class="text-gray-400 line-through font-bold">${ORIGINAL_PRICE} ₽</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-900 font-black">Со скидкой:</span>
+                    <span class="text-green-600 font-black text-2xl">${priceDisplay}</span>
+                </div>`;
+            payBtn.textContent = 'Оплатить ' + priceDisplay;
+        }
+    }
+
+    function resetPrice() {
+        const priceBlock = document.getElementById('price-block');
+        const payBtn = document.getElementById('pay-btn');
+        priceBlock.innerHTML = `
+            <div class="flex justify-between items-center">
+                <span class="text-gray-900 font-black">К оплате:</span>
+                <span class="font-black text-2xl text-gray-900">${ORIGINAL_PRICE} ₽</span>
+            </div>`;
+        payBtn.textContent = 'Оплатить ' + ORIGINAL_PRICE + ' ₽';
+    }
+
+    document.getElementById('promo-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); applyPromo(); }
+    });
+</script>
+{% endblock %}

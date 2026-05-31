@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчет тестирования</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm 15mm 15mm 15mm;
+            @bottom-right {
+                content: "Страница " counter(page) " из " counter(pages);
+                font-size: 10px;
+                color: #9ca3af;
+            }
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden;
+        }
+        body {
+            font-family: sans-serif;
+            color: #1f2937;
+            line-height: 1.5;
+            font-size: 12px;
+        }
+        .content-box {
+            width: 100% !important;
+            box-sizing: border-box;
+            text-align: left;
+            margin-top: 10px;
+            display: block;
+        }
+        .content-box table {
+            width: 100% !important;
+            max-width: 100% !important;
+            table-layout: fixed !important;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 11px;
+        }
+        .content-box th, .content-box td {
+            border: 1px solid #e5e7eb;
+            padding: 8px 5px;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
+            white-space: normal !important;
+            vertical-align: top;
+        }
+        .content-box ul, .content-box ol {
+            margin-left: 20px;
+            padding-left: 0;
+        }
+        .header {
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 22px; font-weight: bold; color: #2563eb; text-transform: uppercase; }
+        .meta { text-align: right; font-size: 10px; color: #6b7280; }
+        h1 { font-size: 20px; margin-bottom: 15px; color: #111827; }
+        h2 {
+            font-size: 16px;
+            color: #2563eb;
+            margin-top: 25px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 5px;
+            page-break-after: avoid;
+        }
+        .info-grid { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
+        .info-row td { padding: 6px; border-bottom: 1px solid #f3f4f6; }
+        .label { font-weight: bold; color: #4b5563; width: 30%; }
+        .value { font-weight: bold; color: #111827; }
+        .indices-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        .indices-table th { background: #f3f4f6; padding: 8px; text-align: left; font-size: 10px; text-transform: uppercase; }
+        .indices-table td { padding: 8px; border-bottom: 1px solid #e5e7eb; font-size: 12px; }
+        .score-bar { height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; width: 100%; display: block; }
+        .score-fill { height: 100%; background: #2563eb; }
+        .footer { margin-top: 40px; text-align: center; font-size: 9px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">ПРОФТЕСТ</div>
+        <div class="meta">
+            ID: {{ result.pk }}<br>
+            {{ result.created_at|date:"d.m.Y" }}
+        </div>
+    </div>
+
+    <h1>Результаты: {{ result.child_name }}</h1>
+
+    <table class="info-grid">
+        <tr class="info-row">
+            <td class="label">Возраст</td>
+            <td class="value">{{ result.child_age }} лет</td>
+        </tr>
+        {% if result.suite.version != 'V3' %}
+        <tr class="info-row">
+            <td class="label">{% if result.suite.version == 'V0' %}Уч. заведение / Группа{% else %}Школа / Класс{% endif %}</td>
+            <td class="value">{% if result.suite.version == 'V0' %}{{ result.school_number|default:"-" }}, группа {{ result.grade|default:"-" }}{% else %}№{{ result.school_number|default:"-" }}, {{ result.grade|default:"-" }}{% endif %}</td>
+        </tr>
+        {% endif %}
+    </table>
+
+    <h2>📊 Ключевые показатели</h2>
+    <table class="indices-table">
+        <tr>
+            <th style="width: 40%;">Категория</th>
+            <th style="width: 20%;">Значение</th>
+            <th style="width: 40%;">Визуализация</th>
+        </tr>
+        {% for name, score in result.calculated_indices.items %}
+        {% if name != "Автономность" %}
+        <tr>
+            <td>{{ name }}</td>
+            <td>
+                <b>{{ score }}</b>{% if name != "Предпочитаемый стиль работы" %}%{% endif %}
+            </td>
+            <td>
+                {% if name == "Предпочитаемый стиль работы" %}
+                    <div style="display: flex; align-items: center; justify-content: flex-start; padding-top: 2px;">
+                        {% if score == "ИНДИВИДУАЛЬНЫЙ" %}
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="8" r="4" fill="#2563eb"/>
+                                <path d="M4 20C4 16 8 14 12 14C16 14 20 16 20 20" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        {% elif score == "КОМАНДНЫЙ" %}
+                            <svg width="40" height="24" viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="20" cy="8" r="3.5" fill="#2563eb"/>
+                                <path d="M14 18C14 15 17 13.5 20 13.5C23 13.5 26 15 26 18" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+                                <circle cx="8" cy="10" r="3" fill="#9ca3af"/>
+                                <path d="M3 19C3 16.5 5.5 15 8 15C9.5 15 11 15.5 12 16.5" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>
+                                <circle cx="32" cy="10" r="3" fill="#9ca3af"/>
+                                <path d="M37 19C37 16.5 34.5 15 32 15C30.5 15 29 15.5 28 16.5" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        {% else %}
+                            <svg width="30" height="24" viewBox="0 0 30 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="10" cy="9" r="3.5" fill="#2563eb"/>
+                                <path d="M4 19C4 16 7 14.5 10 14.5C13 14.5 16 16 16 19" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+                                <circle cx="20" cy="9" r="3.5" fill="#2563eb"/>
+                                <path d="M14 19C14 16 17 14.5 20 14.5C23 14.5 26 16 26 19" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        {% endif %}
+                    </div>
+                {% else %}
+                <div class="score-bar">
+                    <div class="score-fill" style="width: {{ score|floatformat:0 }}%;"></div>
+                </div>
+                {% endif %}
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </table>
+
+    {% if report_type == 'profile' %}
+        <h2>🧠 Профиль мышления</h2>
+        <div class="content-box" style="text-align: center; padding: 40px 0;">
+            <div style="font-size: 28px; font-weight: bold; color: #2563eb; text-transform: uppercase; border: 3px solid #2563eb; display: inline-block; padding: 20px 40px; border-radius: 15px;">
+                {{ result.thinking_profile|default:"Не определен" }}
+            </div>
+            <p style="margin-top: 20px; font-size: 14px; color: #4b5563;">
+                Данный профиль определен на основе анализа математических индексов и ответов на вопросы теста.
+            </p>
+        </div>
+    {% elif report_type == 'short' %}
+        <h2>⚡ Предварительный анализ</h2>
+        <div class="content-box">
+            {{ short_interpretation_pdf|safe }}
+        </div>
+    {% else %}
+        <h2>📑 Подробный анализ</h2>
+        <div class="content-box">
+            {{ extended_interpretation_pdf|safe }}
+        </div>
+    {% endif %}
+
+    <div class="footer">
+        {{ domain }} | Проект «Я ПРОФИ» © {% now "Y" %}
+    </div>
+</body>
+</html>

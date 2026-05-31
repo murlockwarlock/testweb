@@ -1,0 +1,300 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+
+{% block sidebar %}{% endblock %}
+
+{# Убираем дублирующиеся заголовки и хлебные крошки для чистого дашборда #}
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<style>
+    #content {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 20px !important;
+        box-sizing: border-box !important;
+        background: none !important;
+    }
+
+    .admin-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+        width: 100%;
+    }
+
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        width: 100%;
+    }
+
+    .stat-box {
+        background: #1e1e1e;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #333;
+        border-top: 4px solid #79aec8;
+        text-align: center;
+    }
+
+    .stat-box.green {
+        border-top-color: #28a745;
+    }
+
+    .stat-box.red {
+        border-top-color: #ba2121;
+    }
+
+    .stat-box.blue {
+        border-top-color: #3b82f6;
+    }
+
+    .stat-box.orange {
+        border-top-color: #f59e0b;
+    }
+
+    .stat-value {
+        display: block;
+        font-size: 32px;
+        font-weight: bold;
+        color: #fff;
+    }
+
+    .stat-label {
+        font-size: 11px;
+        color: #aaa;
+        text-transform: uppercase;
+        margin-top: 8px;
+        letter-spacing: 0.5px;
+    }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 30px;
+        align-items: start;
+    }
+
+    .module {
+        width: 100% !important;
+        margin-bottom: 20px !important;
+        background: #1e1e1e !important;
+        border: 1px solid #333 !important;
+    }
+
+    .module table {
+        width: 100% !important;
+    }
+
+    .module caption {
+        background: #2d2d2d !important;
+        color: #eee !important;
+    }
+
+    .settings-card {
+        background: #2c4f60;
+        color: white;
+        padding: 25px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        border: 1px solid #3d6a80;
+    }
+
+    .settings-card h2 {
+        color: white !important;
+        border: none !important;
+        margin: 0 0 15px 0 !important;
+        padding: 0 !important;
+        font-size: 18px !important;
+    }
+
+    .btn-save {
+        display: block;
+        background: #28a745;
+        color: white !important;
+        text-align: center;
+        padding: 14px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        margin-top: 20px;
+        transition: background 0.2s;
+    }
+
+    .btn-save:hover {
+        background: #218838;
+    }
+
+    .recent-actions-custom {
+        background: #1e1e1e;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #333;
+    }
+
+    .recent-actions-custom h2 {
+        color: #fff !important;
+        background: none !important;
+        padding: 0 !important;
+        margin: 0 0 20px 0 !important;
+        font-size: 18px !important;
+        border-bottom: 1px solid #333 !important;
+        padding-bottom: 10px !important;
+    }
+
+    .actionlist li {
+        border-bottom: 1px solid #2d2d2d !important;
+        padding: 10px 0 !important;
+        color: #ccc !important;
+    }
+
+    .actionlist li a {
+        color: #79aec8 !important;
+    }
+
+    @media (max-width: 1200px) {
+        .main-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="admin-dashboard">
+    <div class="stats-bar">
+        <div class="stat-box blue">
+            <span class="stat-value">{{ stats.tests_today }}</span>
+            <span class="stat-label">Тестов за сегодня</span>
+        </div>
+        <div class="stat-box orange">
+            <span class="stat-value">{{ stats.new_users_today }}</span>
+            <span class="stat-label">Новых за сегодня</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-value">{{ stats.total_users }}</span>
+            <span class="stat-label">Всего пользователей</span>
+        </div>
+        <div class="stat-box green">
+            <span class="stat-value">{{ stats.passed_count }}</span>
+            <span class="stat-label">Прошли тест</span>
+        </div>
+        <div class="stat-box red">
+            <span class="stat-value">{{ stats.unfinished_count }}</span>
+            <span class="stat-label">Не завершили</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-value">{{ stats.kids_under_12 }}</span>
+            <span class="stat-label">Дети (7-11)</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-value">{{ stats.teens_12_17 }}</span>
+            <span class="stat-label">Подростки (12-17)</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-value">{{ stats.adults_18_plus }}</span>
+            <span class="stat-label">Взрослые (18+)</span>
+        </div>
+    </div>
+
+    <div class="stats-bar" style="margin-top: -10px;">
+        <div class="stat-box green">
+            <span class="stat-value">{{ stats.payments_today }}</span>
+            <span class="stat-label">Оплат за сегодня</span>
+        </div>
+        <div class="stat-box green">
+            <span class="stat-value">{{ stats.revenue_today }}₽</span>
+            <span class="stat-label">Выручка за сегодня</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-value">{{ stats.total_payments }}</span>
+            <span class="stat-label">Всего оплат</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-value">{{ stats.total_revenue }}₽</span>
+            <span class="stat-label">Общая выручка</span>
+        </div>
+        <div class="stat-box orange">
+            <span class="stat-value">{{ stats.pending_payments }}</span>
+            <span class="stat-label">Ожидают оплаты</span>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="content-left">
+            {% if app_list %}
+            {% for app in app_list %}
+            <div class="app-{{ app.app_label }} module">
+                <table>
+                    <caption>
+                        <a href="{{ app.app_url }}" class="section">{{ app.name }}</a>
+                    </caption>
+                    {% for model in app.models %}
+                    {% if model.object_name != 'AppConfig' %}
+                    <tr>
+                        <th scope="row">
+                            {% if model.admin_url %}
+                            <a href="{{ model.admin_url }}">{{ model.name }}</a>
+                            {% else %}
+                            {{ model.name }}
+                            {% endif %}
+                        </th>
+                        <td style="width: 100px; text-align: right;">
+                            {% if model.add_url %}
+                            <a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a>
+                            {% endif %}
+                        </td>
+                        <td style="width: 100px; text-align: right;">
+                            {% if model.admin_url %}
+                            <a href="{{ model.admin_url }}" class="changelink">{% translate 'Change' %}</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </table>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="content-right">
+            <div class="settings-card">
+                <h2>Настройки системы</h2>
+                <p style="font-size: 13px; opacity: 0.9; color: #fff;">Ключи DeepSeek, SMS.ru</p>
+                {% if config_url %}
+                <a href="{{ config_url }}" class="btn-save">Изменить параметры</a>
+                {% else %}
+                <p style="color: #ffc107; font-size: 12px; margin-top: 10px;">Конфигурация не найдена</p>
+                {% endif %}
+            </div>
+
+            <div class="recent-actions-custom">
+                <h2>{% translate 'Recent actions' %}</h2>
+                {% load log %}
+                {% get_admin_log 10 as admin_log for_user user %}
+                {% if not admin_log %}
+                <p style="color: #666;">{% translate 'None available' %}</p>
+                {% else %}
+                <ul class="actionlist">
+                    {% for entry in admin_log %}
+                    <li
+                        class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
+                        {% if entry.is_deletion or not entry.get_admin_url %}
+                        {{ entry.object_repr }}
+                        {% else %}
+                        <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                        {% endif %}
+                        <br>
+                        <span class="mini quiet" style="color: #666 !important;">{% filter capfirst %}{{
+                            entry.content_type }}{% endfilter %}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

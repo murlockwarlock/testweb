@@ -1,0 +1,187 @@
+{% extends 'index.html' %}
+{% load test_tags %}
+{% block content %}
+<div class="max-w-3xl mx-auto pb-12">
+    <div class="mb-8 bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+        <div class="prose prose-blue max-w-none text-gray-700 font-medium leading-relaxed">
+            {{ suite.description|safe }}
+        </div>
+    </div>
+
+    <div class="sticky top-0 z-30 bg-[#f8fafc]/95 backdrop-blur-md py-3 mb-6 px-1">
+        <div class="relative h-2.5 md:h-3 w-full bg-gray-200/80 rounded-full overflow-hidden">
+            <div id="progress-bar" class="absolute top-0 left-0 h-full bg-blue-600 transition-all duration-500 ease-out" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <form method="post" id="test-form" class="space-y-4 md:space-y-8">
+        {% csrf_token %}
+        <input type="hidden" name="submit_answers" value="1">
+
+        {% for q in questions %}
+        <div class="question-card bg-white p-4 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border border-gray-100 shadow-sm transition-all" data-q-index="{{ forloop.counter }}">
+            <div class="flex gap-3 md:gap-5 mb-4 md:mb-6">
+                <span class="flex-shrink-0 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-blue-100 text-blue-700 font-black text-sm md:text-xl">
+                    {{ forloop.counter }}
+                </span>
+                <p class="text-base md:text-xl font-bold text-gray-800 leading-snug pt-0.5 md:pt-1">
+                    {{ q.text }}
+                </p>
+            </div>
+
+            <div class="flex justify-between gap-1 md:gap-3">
+                {% for i in scale_range %}
+                <div class="flex-1 flex flex-col items-center gap-2">
+                    <label class="relative cursor-pointer group w-full">
+                        <input type="radio" name="q_{{ q.pk }}" value="{{ i }}" required
+                               class="peer sr-only" onchange="saveAnswer('{{ q.pk }}', this.value)"
+                               {% if temp_answers|get_item:q.pk == i %}checked{% endif %}>
+
+                        <div class="flex flex-col items-center justify-center h-12 md:h-20 rounded-xl md:rounded-2xl border-2 border-gray-50 bg-gray-50/80 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-600 transition-all active:scale-95 shadow-sm">
+                            <span class="text-lg md:text-2xl font-black">{{ i }}</span>
+                        </div>
+                    </label>
+
+                    <div class="text-[8px] md:text-[10px] text-center font-bold text-gray-400 uppercase leading-tight min-h-[24px] px-0.5">
+                        {{ suite.scale_config|get_item:i|default:"" }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if final_questions %}
+        <div class="bg-white p-6 md:p-10 rounded-[2rem] border-2 border-dashed border-gray-100 space-y-8">
+            <div class="text-center">
+                <h3 class="text-lg md:text-2xl font-black text-gray-900">Финальные вопросы</h3>
+                <p class="text-gray-400 text-xs md:text-sm mt-1 font-bold uppercase tracking-widest">Для более точных рекомендаций</p>
+            </div>
+
+            <div class="space-y-6">
+                {% for fq in final_questions %}
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-3 ml-1 leading-relaxed">
+                        {{ fq.text|linebreaksbr }}
+                    </label>
+                    <textarea name="final_{{ fq.pk }}" rows="3" class="w-full p-4 md:p-5 bg-gray-50 border-2 border-gray-300 rounded-2xl outline-none focus:border-blue-500 font-bold resize-none placeholder:text-gray-400 placeholder:font-normal" placeholder="Ваш ответ..."></textarea>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="pt-6 px-1">
+            <button type="button" onclick="openConfirmModal()" class="w-full bg-blue-600 text-white font-black py-4 md:py-6 rounded-2xl shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98]">
+                Завершить тест
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="confirm-modal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="closeConfirmModal()"></div>
+    <div class="relative bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 md:p-8 transform transition-all duration-300 scale-95">
+        <div class="text-center">
+            <h3 class="text-xl md:text-2xl font-black text-gray-900 mb-2">Уже всё?</h3>
+            <p class="text-gray-500 text-sm md:text-base mb-6">Убедитесь, что ответили на все вопросы перед завершением.</p>
+        </div>
+        <div class="flex flex-col gap-3">
+            <button onclick="submitTest()" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition shadow-lg shadow-blue-200">
+                Да, завершить
+            </button>
+            <button onclick="closeConfirmModal()" class="w-full py-3 bg-gray-100 text-gray-400 font-bold rounded-2xl hover:bg-gray-200 transition">
+                Вернуться к тесту
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="loading-overlay" class="fixed inset-0 z-[200] flex items-center justify-center bg-white/98 backdrop-blur-md hidden opacity-0 transition-opacity duration-500">
+    <div class="flex flex-col items-center p-6 text-center max-w-md">
+        <div class="relative w-20 h-20 md:w-24 md:h-24 mb-6">
+            <div class="absolute inset-0 border-[6px] border-blue-100 rounded-full"></div>
+            <div class="absolute inset-0 border-[6px] border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+        </div>
+
+        <h2 class="text-xl md:text-2xl font-black text-gray-900 tracking-tight">Обработка...</h2>
+        <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Пожалуйста, подождите</p>
+    </div>
+</div>
+
+<script>
+    function saveAnswer(qId, score) {
+        const card = document.querySelector(`input[name="q_${qId}"]`).closest('.question-card');
+        card.classList.remove('border-red-500', 'bg-red-50/50');
+        card.classList.add('border-gray-100');
+        const formData = new FormData();
+        formData.append('question_id', qId);
+        formData.append('score', score);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        fetch('/save-answer/', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(updateProgress);
+    }
+
+    function updateProgress() {
+        const total = document.querySelectorAll('.question-card').length;
+        const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+        const percent = (answered / total) * 100;
+        const bar = document.getElementById('progress-bar');
+        if (bar) bar.style.width = percent + '%';
+    }
+    updateProgress();
+
+    function openConfirmModal() {
+        const modal = document.getElementById('confirm-modal');
+        const content = modal.querySelector('.relative');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        }, 10);
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeConfirmModal() {
+        const modal = document.getElementById('confirm-modal');
+        const content = modal.querySelector('.relative');
+        modal.classList.add('opacity-0');
+        content.classList.add('scale-95');
+        content.classList.remove('scale-100');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+
+    function submitTest() {
+        closeConfirmModal();
+        const questions = document.querySelectorAll('.question-card');
+        let firstUnanswered = null;
+        let hasErrors = false;
+        questions.forEach(card => {
+            const answered = card.querySelector('input[type="radio"]:checked');
+            if (!answered) {
+                card.classList.add('border-red-500', 'bg-red-50/50');
+                card.classList.remove('border-gray-100');
+                if (!firstUnanswered) firstUnanswered = card;
+                hasErrors = true;
+            }
+        });
+        if (hasErrors) {
+            firstUnanswered.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        const overlay = document.getElementById('loading-overlay');
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.add('opacity-100'), 50);
+        document.getElementById('test-form').submit();
+    }
+</script>
+{% endblock %}

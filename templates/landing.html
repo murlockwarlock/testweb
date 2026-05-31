@@ -1,0 +1,44 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto pb-12">
+    <div class="text-center mb-10 px-4">
+        <h1 class="text-3xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">
+            {{ landing.title }}
+        </h1>
+        {% if landing.subtitle %}
+        <p class="text-gray-500 text-lg md:text-xl font-medium max-w-2xl mx-auto">
+            {{ landing.subtitle }}
+        </p>
+        {% endif %}
+    </div>
+
+    <div class="mb-10 px-2">
+        {% if youtube_id %}
+            <div class="relative w-full pb-[56.25%] h-0 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-blue-100 border border-gray-100 bg-gray-900">
+                <iframe
+                    class="absolute top-0 left-0 w-full h-full"
+                    src="https://www.youtube-nocookie.com/embed/{{ youtube_id }}?rel=0&enablejsapi=1&origin={{ request.scheme }}://{{ request.get_host }}"
+                    frameborder="0"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        {% elif landing.main_image %}
+            <img src="{{ landing.main_image.url }}" alt="Превью" class="w-full h-auto rounded-[2.5rem] shadow-2xl shadow-blue-100 border border-gray-100">
+        {% endif %}
+    </div>
+
+    <div class="bg-white p-8 md:p-12 rounded-[2.5rem] border border-gray-100 shadow-sm mb-10">
+        <div class="prose prose-blue max-w-none text-gray-700 font-medium leading-relaxed">
+            {{ landing.content_html|safe }}
+        </div>
+    </div>
+
+    <div class="text-center px-4">
+    <a href="{% url 'test_start' %}" class="inline-block w-full sm:w-auto bg-blue-600 text-white text-xl font-black py-5 px-12 rounded-2xl hover:bg-blue-700 transition shadow-2xl shadow-blue-200 active:scale-[0.98]">
+        {% if is_in_progress %}Продолжить тест{% else %}{{ landing.button_text }}{% endif %}
+    </a>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto py-10 px-6 bg-white rounded-[2.5rem] shadow-sm border border-gray-100">
+    {% include 'consent_text.html' %}
+    <div class="mt-10 pt-8 border-t border-gray-100">
+        {% if user.is_authenticated %}
+        <a href="{% url 'dashboard' %}" class="inline-flex items-center bg-blue-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-blue-700 transition shadow-xl shadow-blue-100">
+            Вернуться в личный кабинет
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}" class="inline-flex items-center bg-blue-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-blue-700 transition shadow-xl shadow-blue-100">
+            Вернуться к регистрации
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+Django
+gunicorn
+gevent
+
+# База данных
+psycopg2-binary
+redis
+celery
+
+# HTTP / API
+requests
+python-dotenv
+
+# Telegram бот
+pyTelegramBotAPI
+
+# PDF генерация
+weasyprint
+reportlab
+
+# Парсинг файлов для RAG
+pypdf
+python-docx
+pandas
+openpyxl
+
+# RAG / векторная БД
+chromadb
+langchain-text-splitters
+sentence-transformers
+
+# JWT / криптография (вебхук Точки)
+PyJWT[cryptography]
+cryptography
+
+# Шаблоны / текст
+Markdown
+whitenoise
+django-ratelimit

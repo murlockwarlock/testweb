@@ -1,0 +1,276 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="text-center mb-8 px-4">
+    <h1 class="text-2xl font-black text-gray-900">
+        {% if suites %}
+            Выберите тест
+        {% elif selected_role %}
+            Заполнение данных
+        {% else %}
+            Кто проходит тест?
+        {% endif %}
+    </h1>
+    <p class="text-gray-500 mt-1 text-sm md:text-base">
+        {% if suites %}
+            Варианты для выбранной категории
+        {% elif selected_role %}
+            Введите данные участника
+        {% else %}
+            Выберите роль, чтобы мы подобрали нужные вопросы
+        {% endif %}
+    </p>
+</div>
+
+{% if error %}
+<div class="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm text-center border border-red-100 mx-4 font-bold">
+    {{ error }}
+</div>
+{% endif %}
+
+{% if not selected_role and not suites %}
+<div class="px-4 space-y-4 max-w-2xl mx-auto">
+    <form method="post" class="grid grid-cols-1 gap-4">
+        {% csrf_token %}
+        <input type="hidden" name="select_role" value="true">
+
+        <button type="submit" name="role_code" value="V0" class="group relative p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-blue-500 hover:shadow-xl transition-all duration-300 text-left">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center font-black text-xl">👶</div>
+                <div>
+                    <h3 class="font-bold text-gray-900 text-lg">Я — родитель</h3>
+                    <p class="text-sm text-gray-500 font-medium">Тестирую ребёнка-дошкольника (5-7 лет)</p>
+                </div>
+            </div>
+        </button>
+
+        <button type="submit" name="role_code" value="V1" class="group relative p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-blue-500 hover:shadow-xl transition-all duration-300 text-left">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center font-black text-xl">🎒</div>
+                <div>
+                    <h3 class="font-bold text-gray-900 text-lg">Я — родитель</h3>
+                    <p class="text-sm text-gray-500 font-medium">Тестирую школьника (7-11 лет)</p>
+                </div>
+            </div>
+        </button>
+
+        <button type="submit" name="role_code" value="V2" class="group relative p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-blue-500 hover:shadow-xl transition-all duration-300 text-left">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center font-black text-xl">🚀</div>
+                <div>
+                    <h3 class="font-bold text-gray-900 text-lg">Я — школьник (12-17 лет)</h3>
+                    <p class="text-sm text-gray-500 font-medium">Заполняю тест самостоятельно</p>
+                </div>
+            </div>
+        </button>
+
+        <button type="submit" name="role_code" value="V3" class="group relative p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-blue-500 hover:shadow-xl transition-all duration-300 text-left">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center font-black text-xl">💼</div>
+                <div>
+                    <h3 class="font-bold text-gray-900 text-lg">Я — взрослый (18+)</h3>
+                    <p class="text-sm text-gray-500 font-medium">Хочу пройти тест для себя</p>
+                </div>
+            </div>
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if selected_role and not suites %}
+<div class="bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-xl shadow-gray-200/50 mx-4 relative">
+    <form method="post" class="absolute top-6 right-6">
+        {% csrf_token %}
+        <button type="submit" name="reset_role" class="text-xs font-bold text-gray-400 hover:text-red-500 uppercase tracking-widest transition">
+            Сменить роль
+        </button>
+    </form>
+
+    <form method="post" class="space-y-5" id="user-info-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold border border-red-100">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div>
+            <label class="block text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest ml-1">Город / Регион</label>
+            {{ form.location }}
+            {% if form.location.errors %}<p class="text-red-500 text-[10px] mt-1 ml-1 font-bold">{{ form.location.errors.0 }}</p>{% endif %}
+        </div>
+
+        {% if selected_role != 'V3' %}
+        <div>
+            <label class="block text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest ml-1">Имя и Фамилия ребёнка</label>
+            {{ form.child_name }}
+            {% if form.child_name.errors %}<p class="text-red-500 text-[10px] mt-1 ml-1 font-bold">{{ form.child_name.errors.0 }}</p>{% endif %}
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 {% if selected_role != 'V3' %}md:grid-cols-2{% endif %} gap-4">
+            <div>
+                <label class="block text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest ml-1">Дата рождения</label>
+                {{ form.child_dob }}
+                <input type="text" id="display_child_dob" placeholder="ДД.ММ.ГГГГ" maxlength="10" inputmode="numeric" required
+                       class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl outline-none focus:border-blue-500 font-bold placeholder-gray-300"
+                       value="{{ form.child_dob.value|date:'d.m.Y'|default:'' }}">
+                {% if form.child_dob.errors %}<p class="text-red-500 text-[10px] mt-1 ml-1 font-bold">{{ form.child_dob.errors.0 }}</p>{% endif %}
+            </div>
+
+            {% if selected_role != 'V3' %}
+            <div>
+                <label class="block text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest ml-1">Пол</label>
+                {{ form.gender }}
+                {% if form.gender.errors %}<p class="text-red-500 text-[10px] mt-1 ml-1 font-bold">{{ form.gender.errors.0 }}</p>{% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        {% if selected_role == 'V0' or selected_role == 'V1' or selected_role == 'V2' %}
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest ml-1">
+                    {% if selected_role == 'V0' %}Садик / Школа (если есть){% else %}№ Школы{% endif %}
+                </label>
+                {{ form.school_number }}
+                {% if form.school_number.errors %}<p class="text-red-500 text-[10px] mt-1 ml-1 font-bold">{{ form.school_number.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest ml-1">
+                    {% if selected_role == 'V0' %}Группа / Класс{% else %}Класс{% endif %}
+                </label>
+                {{ form.grade }}
+                {% if form.grade.errors %}<p class="text-red-500 text-[10px] mt-1 ml-1 font-bold">{{ form.grade.errors.0 }}</p>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if selected_role == 'V2' %}
+        <div class="space-y-5 pt-4 border-t border-gray-100">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Данные родителя (для связи)</p>
+            <div>
+                <label class="block text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest ml-1">Имя родителя</label>
+                {{ form.parent_name }}
+                {% if form.parent_name.errors %}<p class="text-red-500 text-[10px] mt-1 ml-1 font-bold">{{ form.parent_name.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest ml-1">Телефон родителя</label>
+                {{ form.parent_phone }}
+                {% if form.parent_phone.errors %}<p class="text-red-500 text-[10px] mt-1 ml-1 font-bold">{{ form.parent_phone.errors.0 }}</p>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <button type="submit" name="start_test" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition shadow-xl shadow-blue-100 mt-4">
+            Далее
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if suites %}
+{% if age_warning %}
+<div id="age-warning-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl">
+        <div class="text-4xl text-center mb-3">⚠️</div>
+        <h3 class="font-black text-gray-900 text-lg mb-3 text-center">Внимание</h3>
+        <p class="text-gray-600 text-sm text-center mb-6">{{ age_warning }}</p>
+        <button onclick="document.getElementById('age-warning-overlay').remove()"
+                class="w-full bg-blue-600 text-white font-black py-3 rounded-2xl hover:bg-blue-700 transition">
+            Всё равно пройти тест
+        </button>
+        <button onclick="history.back()"
+                class="w-full mt-3 text-gray-500 font-bold py-2 text-sm hover:text-gray-800 transition">
+            ← Изменить данные
+        </button>
+    </div>
+</div>
+{% endif %}
+<div class="space-y-3 px-4">
+    {% for suite in suites %}
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="suite_id" value="{{ suite.pk }}">
+        <button type="submit" name="select_suite" class="w-full text-left p-5 md:p-6 border-2 border-gray-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition shadow-sm bg-white">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-base md:text-lg text-gray-900">{{ suite.name }}</h3>
+                    <p class="text-xs text-gray-400 mt-1 font-bold uppercase tracking-wide">{{ suite.get_version_display }}</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </div>
+        </button>
+    </form>
+    {% endfor %}
+
+    <div class="pt-4 text-center">
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" name="reset_role" class="inline-block text-xs font-black text-gray-400 uppercase tracking-widest hover:text-blue-600 transition">
+                ← Изменить данные / Роль
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const realDobInput = document.querySelector('input[name="child_dob"]');
+        const displayDobInput = document.getElementById('display_child_dob');
+        const parentPhoneInput = document.querySelector('input[name="parent_phone"]');
+
+        if (displayDobInput && realDobInput) {
+            if (realDobInput.value && !displayDobInput.value) {
+                const parts = realDobInput.value.split('-');
+                if (parts.length === 3) {
+                    displayDobInput.value = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                }
+            }
+
+            displayDobInput.addEventListener('input', function(e) {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length > 8) v = v.substring(0, 8);
+                let output = '';
+                if (v.length > 4) {
+                    output = v.slice(0, 2) + '.' + v.slice(2, 4) + '.' + v.slice(4);
+                } else if (v.length > 2) {
+                    output = v.slice(0, 2) + '.' + v.slice(2);
+                } else {
+                    output = v;
+                }
+                e.target.value = output;
+                updateHiddenDate();
+            });
+
+            displayDobInput.addEventListener('blur', updateHiddenDate);
+
+            function updateHiddenDate() {
+                const val = displayDobInput.value;
+                if (val.length !== 10) return;
+                const parts = val.split('.');
+                if (parts.length === 3) {
+                    realDobInput.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+            }
+        }
+
+        if (parentPhoneInput) {
+            parentPhoneInput.addEventListener('input', function(e) {
+                let x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+                if (!x) return;
+                if (!x[2] && x[1] !== '') {
+                    e.target.value = (x[1] === '7' || x[1] === '8') ? '+7 ' : '+7 ' + x[1];
+                } else {
+                    e.target.value = !x[3] ? '+7 (' + x[2] : '+7 (' + x[2] + ') ' + x[3] + (x[4] ? '-' + x[4] : '') + (x[5] ? '-' + x[5] : '');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

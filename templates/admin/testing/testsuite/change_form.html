@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+
+{% block content %}
+    {% if admin_help_text %}
+        <div style="background: #fff9c4; border-left: 6px solid #fbc02d; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #333; font-family: Arial, sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <div style="font-weight: bold; font-size: 16px; margin-bottom: 8px; color: #856404;">💡 Шпаргалка для психолога</div>
+            <div style="font-size: 14px; line-height: 1.6;">
+                {{ admin_help_text|safe }}
+            </div>
+        </div>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}
